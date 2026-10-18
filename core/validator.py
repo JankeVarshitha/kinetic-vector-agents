@@ -7,7 +7,7 @@ class VectorValidator:
         if not xml_string or "<svg" not in xml_string.lower():
             return False, "Output lacks structural SVG root context signatures."
         try:
-            # Programs an internal structural token parse step
+            # Executes strict XML structural validation pass
             ET.fromstring(xml_string)
             return True, xml_string
         except ET.ParseError as e:
