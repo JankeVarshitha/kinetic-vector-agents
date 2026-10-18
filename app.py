@@ -21,7 +21,7 @@ if "active_config" not in st.session_state:
 if "active_svg" not in st.session_state:
     st.session_state.active_svg = None
 
-st.title("⚡ Motion-Lattice Engine")
+st.title("Animation Generator")
 st.subheader("NVIDIA NIM Multi-Agent Text-to-SVG Kinetic Synthesis Framework")
 
 st.sidebar.header("🔑 Authentication")
@@ -31,19 +31,19 @@ secret_token = st.secrets.get("NVIDIA_API_KEY") if "NVIDIA_API_KEY" in st.secret
 active_token = token_input if token_input else secret_token
 
 if active_token:
-    st.sidebar.success("🔒 Remote NIM Gateway Active")
+    st.sidebar.success("Remote NIM Gateway Active")
 else:
-    st.sidebar.warning("⚠️ Access Key Missing")
+    st.sidebar.warning("Access Key Missing")
 
 col_input, col_output = st.columns(2)
 
 with col_input:
-    st.markdown("### 📥 Generation Controls")
+    st.markdown("### Generation Controls")
     prompt = st.text_area("Describe your animation concept:", value="A sleek neon cyberpunk loader icon with smooth rotating gears.", height=100)
     generate_btn = st.button("Compile Kinetic Asset", type="primary")
 
 with col_output:
-    st.markdown("### 📺 Viewport")
+    st.markdown("### Generated Animation")
     render_placeholder = st.empty()
     
     if st.session_state.active_svg:
@@ -122,5 +122,5 @@ if st.session_state.active_svg and st.session_state.active_config:
                 else:
                     st.error("❌ Refactoring output failed canvas validation controls.")
 
-    if st.button("🎨 Open Color & Style Customization Tool"):
+    if st.button("Click to Open Customization Tool"):
         open_style_modal()
