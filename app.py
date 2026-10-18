@@ -49,6 +49,7 @@ with col_output:
     else:
         render_placeholder.info("Awaiting pipeline generation directives...")
 
+# app.py (Replace only the generate_btn execution block with this)
 if generate_btn:
     if not active_token:
         st.error("❌ Authentication Refused: Key parameters uninitialized.")
@@ -56,13 +57,21 @@ if generate_btn:
         with st.spinner("Processing downstream multi-agent nodes..."):
             engine = KineticVectorEngine(nim_token=active_token)
             generated_output = engine.build_animation(prompt)
-            is_valid, final_svg = VectorValidator.validate_svg_syntax(generated_output)
             
-            if is_valid:
-                st.session_state.active_svg = final_svg
-                st.rerun()
+            if not generated_output:
+                st.error("❌ Pipeline returned an empty vector string object.")
             else:
-                st.error("❌ Code Generation failed structural XML validation gates.")
+                is_valid, final_svg = VectorValidator.validate_svg_syntax(generated_output)
+                
+                if is_valid:
+                    st.session_state.active_svg = final_svg
+                    st.rerun()
+                else:
+                    st.error("❌ Code Generation failed structural XML validation gates.")
+                    # VISUAL DEBUGGER GATE: Render the broken code inside text boxes so you see it instantly!
+                    st.warning("Inspect the invalid syntax structure below:")
+                    st.code(generated_output, language="xml")
+
 
 if st.session_state.active_svg:
     st.markdown("---")
