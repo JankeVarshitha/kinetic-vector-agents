@@ -24,32 +24,27 @@ class KineticVectorEngine:
 
     def build_animation(self, motion_intent: str) -> str:
         """Sequential layout-to-kinetic agent pipeline execution mapping."""
+        # Agent 1 builds the visual layout scaffolding
         layout_system = (
-            "detailed thinking off\n" # OFFICIAL DIRECTIVE: Instantly disables internal reasoning tokens
-            "You are an expert Frontend AI Architect specializing in raw vector layout design. "
-            "Generate ONLY valid, clean, modern, semantic SVG code. No explanations, no conversation. "
-            "Do NOT include any markdown code blocks (like ```xml), and no text outside the SVG tags."
+            "You are an expert Frontend Architect specializing in ultra-fast, modern HTML/CSS art. "
+            "Generate ONLY a self-contained HTML wrapper containing a centered <div> structure or HTML5 <canvas>. "
+            "Do NOT include any markdown blocks (like ```html) and no conversational text explanations. "
+            "Ensure elements have clean semantic class names or IDs."
         )
         
-        base_raw = self.bridge.request_inference(layout_system, f"Asset Target: {motion_intent}")
-        if not base_raw:
-            st.error("⚠️ Pipeline Failure: Agent 1 failed to build layout structural context.")
-            return ""
-        
-        base_svg = self._extract_svg(base_raw)
-        
+        base_html = self.bridge.request_inference(layout_system, f"Asset Target: {motion_intent}")
+        base_html = re.sub(r"```html|```", "", base_html).strip()
+
+        # Agent 2 injects the animation stylesheet
         animation_system = (
-            "You are a Senior SVG Kinetic Designer. Take the provided SVG code and inject a high-performance "
-            "<style> block containing fluid, looping CSS @keyframes animations targeting semantic element IDs. "
-            "Output ONLY the complete, newly combined raw SVG code. No markdown, no text explanations, no conversation."
+            "You are a Senior CSS Kinetic Designer. Take the provided HTML snippet and inject a high-performance "
+            "<style> block containing fluid, looping CSS @keyframes animations targeting the layout classes. "
+            "Output ONLY the newly combined raw, complete HTML string. No markdown wraps, no explanations."
         )
         
-        animated_raw = self.bridge.request_inference(animation_system, f"Theme: '{motion_intent}'.\n\nBase SVG:\n{base_svg}")
-        if not animated_raw:
-            st.error("⚠️ Pipeline Failure: Agent 2 failed to compile the kinetic stylesheet animation layer.")
-            return ""
-            
-        return self._extract_svg(animated_raw)
+        animated_html = self.bridge.request_inference(animation_system, f"Theme: '{motion_intent}'.\n\nBase HTML:\n{base_html}")
+        return re.sub(r"```html|```", "", animated_html).strip()
+
 
     def modify_style(self, current_svg: str, style_modification_prompt: str) -> str:
         """Refactors active vector DOM states by selectively isolating and overriding color definitions."""
