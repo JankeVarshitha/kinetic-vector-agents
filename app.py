@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 from core.pipeline import KineticVectorEngine
 from core.validator import VectorValidator
 
-st.set_page_config(page_title="Motion-Lattice Engine", layout="wide", page_icon="🎨")
+st.set_page_config(page_title="AI animation generator", layout="wide", )
 
 # Persistent State Initializers
 if "active_config" not in st.session_state:
@@ -75,7 +75,7 @@ with col_input:
                     st.rerun()
 
         # The modification button now renders elegantly directly under Compile Kinetic Asset
-        if st.button("🎨 Click to Open Customization Tool", use_container_width=True):
+        if st.button(" Click to Open Customization Tool", use_container_width=True):
             open_style_modal()
 
 with col_output:
