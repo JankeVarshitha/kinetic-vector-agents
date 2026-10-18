@@ -40,8 +40,7 @@ class NIMBridge:
                 url=self.url, 
                 headers=headers, 
                 json=payload, 
-                timeout=360
-            )
+                timeout=600            )
 
             st.code(response)
             
