@@ -24,7 +24,7 @@ class KineticVectorEngine:
             width = component.get("width", "100px")
             height = component.get("height", "100px")
             
-            # Position offsets (allows stacking elements to form complex objects like heads/eyes)
+            # Position offsets
             top_offset = component.get("top_offset_percent", 50)
             left_offset = component.get("left_offset_percent", 50)
             
@@ -37,7 +37,7 @@ class KineticVectorEngine:
 
             if shape_type == "circle":
                 border_radius = "50%"
-                border_style = component.get("style", "dashed") # solid, dashed, dotted
+                border_style = component.get("style", "dashed")
             elif shape_type == "square":
                 border_radius = "8px"
                 border_style = "solid"
@@ -51,7 +51,6 @@ class KineticVectorEngine:
             elif shape_type == "gear-teeth":
                 border_radius = "50%"
                 border_style = "dashed"
-                # Heavy neon styling optimization
                 css_rules += f"""
                 .{c_id}::before {{
                     content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
@@ -85,7 +84,7 @@ class KineticVectorEngine:
         <head>
             <style>
                 body {{ background: {bg}; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; margin: 0; }}
-                .container {{ position: relative; width: 400px; height: 400px; border: 1px rgba(255,255,255,0.05) solid; }}
+                .container {{ position: relative; width: 400px; height: 400px; }}
                 {css_rules}
                 @keyframes spin-cw {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
                 @keyframes spin-ccw {{ 0% {{ transform: rotate(360deg); }} 100% {{ transform: rotate(0deg); }} }}
@@ -103,15 +102,14 @@ class KineticVectorEngine:
         """Sequential layout-to-kinetic agent pipeline execution mapping."""
         layout_system = (
             "You are an expert design metadata compiler. Output ONLY a valid JSON object or Python dictionary. "
-            "Combine multiple layout shapes together to represent the user's prompt (e.g. if a robot, use square for head, circles for glowing eyes, gear-teeth for time vortex). "
-            "Do NOT include markdown syntax wraps (```python) and no conversation.\n\n"
+            "Combine multiple layout shapes together to represent the user's prompt. Do NOT include markdown syntax wraps (```python) and no conversation.\n\n"
             "Dictionary formatting parameters rules:\n"
             "- shape options: 'circle', 'square', 'capsule', 'triangle', 'gear-teeth'\n"
             "- style options (for circles): 'solid', 'dashed', 'dotted'\n"
             "- direction options: 'cw', 'ccw'\n"
-            "- Use top_offset_percent and left_offset_percent (0-100) to arrange parts into an object layout structural sketch.\n\n"
+            "- Use top_offset_percent and left_offset_percent (0-100) to arrange parts.\n\n"
             "Target exact structure framework:\n"
-            "{'bg_color': '#hex', 'speed_multiplier': 1.0, 'components': [{'id': 'head', 'shape': 'square', 'color': '#hex', 'width': '120px', 'height': '120px', 'top_offset_percent': 40, 'left_offset_percent': 50, 'direction': 'cw', 'duration_seconds': 0.0}]}"
+            "{'bg_color': '#hex', 'speed_multiplier': 1.0, 'components': [{'id': 'head', 'shape': 'square', 'color': '#hex', 'width': '120px', 'height': '120px', 'top_offset_percent': 40, 'left_offset_percent': 50, 'direction': 'cw', 'duration_seconds': 2.0}]}"
         )
         
         raw_output = self.bridge.request_inference(layout_system, f"Asset Target: {motion_intent}")
@@ -135,3 +133,33 @@ class KineticVectorEngine:
             except Exception as e:
                 st.error(f"❌ Structural Metadata Translation Failure: {str(e)}")
                 return ""
+
+    def modify_style(self, current_config_dict: dict, style_modification_prompt: str) -> dict:
+        """Refactors active design configuration parameters by mutating color hex definitions."""
+        refactor_system = (
+            "You are a Senior UI Technical Lead. You modify ONLY the color properties ('bg_color' and component 'color' attributes) "
+            "of the provided Python configuration dictionary based on the user's mutation instruction. "
+            "Keep all dimensions, shapes, animation paths, IDs, speeds, and structure completely untouched. "
+            "Output ONLY the modified complete Python dictionary configuration block. No markdown, no explanations."
+        )
+        
+        raw_output = self.bridge.request_inference(
+            refactor_system, 
+            f"Mutation Request: {style_modification_prompt}\n\nCurrent Configuration Dictionary:\n{str(current_config_dict)}"
+        )
+        if not raw_output:
+            return current_config_dict
+            
+        dict_match = re.search(r'(\{[\s\S]*\})', raw_output)
+        if not dict_match:
+            return current_config_dict
+            
+        clean_str = dict_match.group(1).strip()
+        
+        try:
+            return ast.literal_eval(clean_str)
+        except Exception:
+            try:
+                return json.loads(clean_str.replace("'", '"'))
+            except Exception:
+                return current_config_dict
