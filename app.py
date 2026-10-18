@@ -1,20 +1,23 @@
 import os
 import sys
+import re
+import ast
 
 # --- DYNAMIC ROOT DIRECTORY WRAPPER ---
-# Enforces clean package namespace tracking across Streamlit cloud environments
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-# Standard entry imports now execute flawlessly without namespace collisions
 import streamlit as st
+import streamlit.components.v1 as components
 from core.pipeline import KineticVectorEngine
 from core.validator import VectorValidator
 
-
 st.set_page_config(page_title="Motion-Lattice Engine", layout="wide", page_icon="🎨")
 
+# Persistent State Initializers
+if "active_config" not in st.session_state:
+    st.session_state.active_config = None
 if "active_svg" not in st.session_state:
     st.session_state.active_svg = None
 
@@ -24,7 +27,6 @@ st.subheader("NVIDIA NIM Multi-Agent Text-to-SVG Kinetic Synthesis Framework")
 st.sidebar.header("🔑 Authentication")
 token_input = st.sidebar.text_input("Custom NVIDIA API Key (Optional):", type="password")
 
-# Multi-layer secret variable extraction
 secret_token = st.secrets.get("NVIDIA_API_KEY") if "NVIDIA_API_KEY" in st.secrets else os.getenv("NVIDIA_API_KEY")
 active_token = token_input if token_input else secret_token
 
@@ -33,7 +35,6 @@ if active_token:
 else:
     st.sidebar.warning("⚠️ Access Key Missing")
 
-# Resolved: Absolute layout columns declaration specified
 col_input, col_output = st.columns(2)
 
 with col_input:
@@ -41,57 +42,85 @@ with col_input:
     prompt = st.text_area("Describe your animation concept:", value="A sleek neon cyberpunk loader icon with smooth rotating gears.", height=100)
     generate_btn = st.button("Compile Kinetic Asset", type="primary")
 
-# app.py (Replace your current col_output with this layout version)
 with col_output:
     st.markdown("### 📺 Viewport")
     render_placeholder = st.empty()
     
     if st.session_state.active_svg:
-        # FIXED: Wrap components call via the utility inside the placeholder shell
         with render_placeholder.container():
-            import streamlit.components.v1 as components
             components.html(st.session_state.active_svg, height=500, scrolling=True)
     else:
         render_placeholder.info("Awaiting pipeline generation directives...")
 
-
-# app.py (Replace only the generate_btn execution block with this)
+# --- GENERATION LIFECYCLE CONTROLLER ---
 if generate_btn:
     if not active_token:
         st.error("❌ Authentication Refused: Key parameters uninitialized.")
     else:
         with st.spinner("Processing downstream multi-agent nodes..."):
             engine = KineticVectorEngine(nim_token=active_token)
-            generated_output = engine.build_animation(prompt)
             
-            if not generated_output:
-                st.error("❌ Pipeline returned an empty vector string object.")
+            # Request meta configuration layout dictionary directly
+            layout_system = (
+                "You are an expert design metadata compiler. Output ONLY a valid JSON object or Python dictionary. "
+                "Combine multiple layout shapes together to represent the user's prompt. Do NOT include markdown syntax wraps (```python) and no conversation.\n\n"
+                "Target exact structure framework:\n"
+                "{'bg_color': '#hex', 'speed_multiplier': 1.0, 'components': [{'id': 'head', 'shape': 'square', 'color': '#hex', 'width': '120px', 'height': '120px', 'top_offset_percent': 40, 'left_offset_percent': 50, 'direction': 'cw', 'duration_seconds': 2.0}]}"
+            )
+            raw_output = engine.bridge.request_inference(layout_system, f"Asset Target: {prompt}")
+            
+            dict_match = re.search(r'(\{[\s\S]*\})', raw_output)
+            if dict_match:
+                try:
+                    # FIXED: Bind layout token maps directly into structural session parameters before compilation
+                    clean_str = dict_match.group(1).strip()
+                    try:
+                        config = ast.literal_eval(clean_str)
+                    except:
+                        import json
+                        config = json.loads(clean_str.replace("'", '"'))
+                        
+                    st.session_state.active_config = config
+                    
+                    # Compile dictionary tokens into the executable viewport string layer
+                    compiled_html = engine._compile_to_html(config)
+                    is_valid, final_svg = VectorValidator.validate_svg_syntax(compiled_html)
+                    
+                    if is_valid:
+                        st.session_state.active_svg = final_svg
+                        st.rerun()
+                    else:
+                        st.error("❌ Generated code failed structural markup validation gates.")
+                except Exception as e:
+                    st.error(f"❌ Structural Parser Failure: {str(e)}")
             else:
-                is_valid, final_svg = VectorValidator.validate_svg_syntax(generated_output)
-                
-                if is_valid:
-                    st.session_state.active_svg = final_svg
-                    st.rerun()
-                else:
-                    st.error("❌ Code Generation failed structural XML validation gates.")
-                    # VISUAL DEBUGGER GATE: Render the broken code inside text boxes so you see it instantly!
-                    st.warning("Inspect the invalid syntax structure below:")
-                    st.code(generated_output, language="xml")
+                st.error("❌ Topology Conflict: Server output lacks validation boundaries.")
+                st.code(raw_output)
 
-
-if st.session_state.active_svg:
+# --- LIVE REFACTORING DIALOG CONTROL HUB ---
+if st.session_state.active_svg and st.session_state.active_config:
     st.markdown("---")
+    
     @st.dialog("Refactor Vector Styling State")
     def open_style_modal():
         style_prompt = st.text_input("Styling Instruction:", placeholder="e.g., Change to neon emerald green")
         if st.button("Submit Refactoring Request", type="primary"):
             with st.spinner("Modifying runtime vectors..."):
                 engine = KineticVectorEngine(nim_token=active_token)
-                modified_output = engine.modify_style(st.session_state.active_svg, style_prompt)
-                is_valid, final_modified_svg = VectorValidator.validate_svg_syntax(modified_output)
+                
+                # Fetch structural changes as an updated dictionary object
+                modified_config = engine.modify_style(st.session_state.active_config, style_prompt)
+                st.session_state.active_config = modified_config
+                
+                # Re-compile the view state
+                compiled_html = engine._compile_to_html(modified_config)
+                is_valid, final_modified_svg = VectorValidator.validate_svg_syntax(compiled_html)
+                
                 if is_valid:
                     st.session_state.active_svg = final_modified_svg
                     st.rerun()
+                else:
+                    st.error("❌ Refactoring output failed canvas validation controls.")
 
     if st.button("🎨 Open Color & Style Customization Tool"):
         open_style_modal()
