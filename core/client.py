@@ -3,22 +3,21 @@ import json
 import requests
 import streamlit as st
 
-class InferenceBridge:
-    """Encapsulates raw request protocols targeting remote OpenRouter compute engines."""
-    def __init__(self, api_token: str):
-        self.api_token = api_token
-        self.url = "https://openrouter.ai/api/v1/chat/completions"
+class NIMBridge:
+    """Encapsulates raw request protocols targeting remote NVIDIA NIM inference engines."""
+    def __init__(self, nim_token: str):
+        self.nim_token = nim_token
+        # Direct structural route targeting NVIDIA's cloud completion gateway
+        self.url = "https://nvidia.com"
         
-    def request_inference(self, system_prompt: str, user_prompt: str, is_refactor: bool = False) -> str:
-        """Executes a direct raw HTTP POST request optimized for OpenRouter free inference models."""
-        # Clean fallback routing matrix utilizing the verified free models
-        selected_model = "cohere/north-mini-code:free" if is_refactor else "google/gemma-4-26b-a4b-it:free"
+    def request_inference(self, system_prompt: str, user_prompt: str) -> str:
+        """Executes a low-temperature POST request optimized for NVIDIA NIM free models."""
+        # Configured to run the frontier-level reasoning model
+        selected_model = "google/gemma-4-31b-it"
         
         headers = {
-            "Authorization": f"Bearer {self.api_token}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://localhost:8501",
-            "X-Title": "Motion-Lattice Engine"
+            "Authorization": f"Bearer {self.nim_token}",
+            "Content-Type": "application/json"
         }
         
         payload = {
@@ -27,8 +26,9 @@ class InferenceBridge:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            "temperature": 0.1,  # Low temperature strictly guarantees deterministic XML layouts
-            "reasoning": {"enabled": True}  # Enforces explicit reasoning paths on supported models
+            # Configured to conform strictly to partner-recommended sampling guidelines
+            "temperature": 0.1,
+            "max_tokens": 2048
         }
         
         try:
@@ -36,24 +36,23 @@ class InferenceBridge:
                 url=self.url,
                 headers=headers,
                 data=json.dumps(payload),
-                timeout=30
+                timeout=45  # Extended threshold for processing dense vector layers
             )
             
-            # Catch HTTP error payloads before parsing json structures
             response.raise_for_status()
             response_json = response.json()
             
-            # Direct extraction targeting the assistant message dictionary content block
+            # Direct extraction targeting choice array message contents
             if 'choices' in response_json and len(response_json['choices']) > 0:
-                message_data = response_json['choices'][0]['message']
-                return message_data.get('content', '')
+                message_block = response_json['choices'][0]['message']
+                return message_block.get('content', '')
             else:
-                st.error("API Error: Response payload missing choices array topology.")
+                st.error("NIM Error: Response payload missing choices array topology.")
                 return ""
                 
         except requests.exceptions.HTTPError as http_err:
-            st.error(f"HTTP Infrastructure Exception: {response.status_code} - {response.text}")
+            st.error(f"NIM Gate Exception: {response.status_code} - {response.text}")
             return ""
         except Exception as e:
-            st.error(f"Inference Engine Runtime Exception: {str(e)}")
+            st.error(f"NIM Runtime Exception: {str(e)}")
             return ""
