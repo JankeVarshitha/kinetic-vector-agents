@@ -25,10 +25,10 @@ class KineticVectorEngine:
     def build_animation(self, motion_intent: str) -> str:
         """Sequential layout-to-kinetic agent pipeline execution mapping."""
         layout_system = (
+            "detailed thinking off\n" # OFFICIAL DIRECTIVE: Instantly disables internal reasoning tokens
             "You are an expert Frontend AI Architect specializing in raw vector layout design. "
             "Generate ONLY valid, clean, modern, semantic SVG code. No explanations, no conversation. "
-            "Do NOT include any markdown code blocks (like ```xml), and no text outside the SVG tags. "
-            "Assign explicit semantic IDs to critical animated components (e.g., id='ball', id='wing')."
+            "Do NOT include any markdown code blocks (like ```xml), and no text outside the SVG tags."
         )
         
         base_raw = self.bridge.request_inference(layout_system, f"Asset Target: {motion_intent}")
