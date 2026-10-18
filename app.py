@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import ast
+import json
 
 # --- DYNAMIC ROOT DIRECTORY WRAPPER ---
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -24,16 +25,8 @@ if "active_svg" not in st.session_state:
 st.title("Animation Generator")
 st.subheader("NVIDIA NIM Multi-Agent Text-to-SVG Kinetic Synthesis Framework")
 
-st.sidebar.header("🔑 Authentication")
-token_input = st.sidebar.text_input("Custom NVIDIA API Key (Optional):", type="password")
-
-secret_token = st.secrets.get("NVIDIA_API_KEY") if "NVIDIA_API_KEY" in st.secrets else os.getenv("NVIDIA_API_KEY")
-active_token = token_input if token_input else secret_token
-
-if active_token:
-    st.sidebar.success("Remote NIM Gateway Active")
-else:
-    st.sidebar.warning("Access Key Missing")
+# --- BACKGROUND AUTHENTICATION BINDING ---
+active_token = st.secrets.get("NVIDIA_API_KEY") if "NVIDIA_API_KEY" in st.secrets else os.getenv("NVIDIA_API_KEY")
 
 col_input, col_output = st.columns(2)
 
@@ -45,7 +38,6 @@ with col_input:
 with col_output:
     st.markdown("### Generated Animation")
     render_placeholder = st.empty()
-    
     if st.session_state.active_svg:
         with render_placeholder.container():
             components.html(st.session_state.active_svg, height=500, scrolling=True)
@@ -55,12 +47,11 @@ with col_output:
 # --- GENERATION LIFECYCLE CONTROLLER ---
 if generate_btn:
     if not active_token:
-        st.error("❌ Authentication Refused: Key parameters uninitialized.")
+        st.error("❌ Authentication Refused: NVIDIA_API_KEY could not be found in secrets or environment variables.")
     else:
         with st.spinner("Processing downstream multi-agent nodes..."):
             engine = KineticVectorEngine(nim_token=active_token)
             
-            # Request meta configuration layout dictionary directly
             layout_system = (
                 "You are an expert design metadata compiler. Output ONLY a valid JSON object or Python dictionary. "
                 "Combine multiple layout shapes together to represent the user's prompt. Do NOT include markdown syntax wraps (```python) and no conversation.\n\n"
@@ -68,21 +59,18 @@ if generate_btn:
                 "{'bg_color': '#hex', 'speed_multiplier': 1.0, 'components': [{'id': 'head', 'shape': 'square', 'color': '#hex', 'width': '120px', 'height': '120px', 'top_offset_percent': 40, 'left_offset_percent': 50, 'direction': 'cw', 'duration_seconds': 2.0}]}"
             )
             raw_output = engine.bridge.request_inference(layout_system, f"Asset Target: {prompt}")
-            
             dict_match = re.search(r'(\{[\s\S]*\})', raw_output)
+            
             if dict_match:
                 try:
-                    # FIXED: Bind layout token maps directly into structural session parameters before compilation
                     clean_str = dict_match.group(1).strip()
                     try:
                         config = ast.literal_eval(clean_str)
                     except:
-                        import json
                         config = json.loads(clean_str.replace("'", '"'))
-                        
+                    
                     st.session_state.active_config = config
                     
-                    # Compile dictionary tokens into the executable viewport string layer
                     compiled_html = engine._compile_to_html(config)
                     is_valid, final_svg = VectorValidator.validate_svg_syntax(compiled_html)
                     
@@ -100,27 +88,40 @@ if generate_btn:
 # --- LIVE REFACTORING DIALOG CONTROL HUB ---
 if st.session_state.active_svg and st.session_state.active_config:
     st.markdown("---")
-    
+
     @st.dialog("Refactor Vector Styling State")
     def open_style_modal():
         style_prompt = st.text_input("Styling Instruction:", placeholder="e.g., Change to neon emerald green")
+        
         if st.button("Submit Refactoring Request", type="primary"):
+            if not style_prompt:
+                st.error("Please enter a styling instruction.")
+                return
+                
             with st.spinner("Modifying runtime vectors..."):
-                engine = KineticVectorEngine(nim_token=active_token)
-                
-                # Fetch structural changes as an updated dictionary object
-                modified_config = engine.modify_style(st.session_state.active_config, style_prompt)
-                st.session_state.active_config = modified_config
-                
-                # Re-compile the view state
-                compiled_html = engine._compile_to_html(modified_config)
-                is_valid, final_modified_svg = VectorValidator.validate_svg_syntax(compiled_html)
-                
-                if is_valid:
-                    st.session_state.active_svg = final_modified_svg
-                    st.rerun()
-                else:
-                    st.error("❌ Refactoring output failed canvas validation controls.")
+                try:
+                    engine = KineticVectorEngine(nim_token=active_token)
+                    modified_config = engine.modify_style(st.session_state.active_config, style_prompt)
+                    
+                    compiled_html = engine._compile_to_html(modified_config)
+                    is_valid, final_modified_svg = VectorValidator.validate_svg_syntax(compiled_html)
+                    
+                    if is_valid:
+                        st.session_state.active_config = modified_config
+                        st.session_state.active_svg = final_modified_svg
+                        st.session_state["just_refactored"] = True
+                    else:
+                        st.error("❌ Refactoring output failed canvas validation controls.")
+                except Exception as e:
+                    st.error(f"❌ Error during modification: {str(e)}")
+            
+            if "just_refactored" in st.session_state:
+                st.rerun()
 
     if st.button("Click to Open Customization Tool"):
         open_style_modal()
+
+# Post-dialog evaluation frame cleanup logic
+if st.session_state.get("just_refactored"):
+    del st.session_state["just_refactored"]
+    st.rerun()
