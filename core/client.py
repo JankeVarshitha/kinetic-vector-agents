@@ -7,7 +7,7 @@ class NIMBridge:
     """Encapsulates raw request protocols targeting remote NVIDIA NIM inference engines."""
     def __init__(self, nim_token: str):
         self.nim_token = nim_token
-        self.url = "https://nvidia.com"
+        self.url = "https://integrate.api.nvidia.com/v1"
 
     def request_inference(self, system_prompt: str, user_prompt: str) -> str:
         """Executes a direct raw HTTP POST request optimized for fast, zero-timeout layout generation."""
