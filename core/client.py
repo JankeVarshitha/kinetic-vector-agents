@@ -32,12 +32,6 @@ class NIMBridge:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            # FIXED: Disables the reasoning path budget so it compiles raw SVG content instantly
-            "extra_body": {
-                "chat_template_kwargs": {
-                    "enable_thinking": False
-                }
-            }
         }
 
         try:
