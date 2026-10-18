@@ -1,7 +1,17 @@
 import os
+import sys
+
+# --- DYNAMIC ROOT DIRECTORY WRAPPER ---
+# Enforces clean package namespace tracking across Streamlit cloud environments
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+# Standard entry imports now execute flawlessly without namespace collisions
 import streamlit as st
 from core.pipeline import KineticVectorEngine
 from core.validator import VectorValidator
+
 
 st.set_page_config(page_title="Motion-Lattice Engine", layout="wide", page_icon="🎨")
 
