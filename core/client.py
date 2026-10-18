@@ -20,9 +20,9 @@ class NIMBridge:
         
         payload = {
             "model": selected_model,
-            "max_tokens": 512,
-            "stream": False,  # Explicitly turned off to allow complete content mapping
-            "temperature": 0.2, # Lowered for faster token generation speed
+            "max_tokens": 1536, # Bumped to 1536 to allow large SVG visual assets to compile fully
+            "stream": False,  
+            "temperature": 0.2, 
             "top_p": 0.95,
             "top_k": 64,
             "frequency_penalty": 0,
@@ -31,38 +31,43 @@ class NIMBridge:
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
-            ]
+            ],
+            # FIXED: Disables the reasoning path budget so it compiles raw SVG content instantly
+            "extra_body": {
+                "chat_template_kwargs": {
+                    "enable_thinking": False
+                }
+            }
         }
 
         try:
-            # Shortened timeout to 30 seconds to fail fast rather than hanging for a minute
             response = requests.post(
                 url=self.url, 
                 headers=headers, 
                 json=payload, 
-                timeout=600)
+                timeout=60
+            )
 
-            
             if response.status_code != 200:
                 st.error(f"❌ NVIDIA NIM Gateway Error ({response.status_code})")
                 st.code(response.text, language="json")
                 return ""
             
             response_json = response.json()
-            st.code(response_json)
             
-            # SAFE TOPOLOGY PARSING: Checks array structures safely to prevent hidden crash loops
             if 'choices' in response_json and len(response_json['choices']) > 0:
                 choice_node = response_json['choices'][0]
-                if 'message' in choice_node and 'content' in choice_node['message']:
-                    return choice_node['message']['content']
+                if 'message' in choice_node:
+                    content = choice_node['message'].get('content')
+                    if content:
+                        return content
             
-            st.error("❌ NIM Response Topology Conflict: Missing 'choices[0].message.content'")
+            st.error("❌ NIM Response Topology Conflict or Empty Content Field.")
             st.code(json.dumps(response_json, indent=2), language="json")
             return ""
                 
         except requests.exceptions.Timeout:
-            st.error("⏳ Connection Timeout: The remote NVIDIA server took over 30s to process this request.")
+            st.error("⏳ Connection Timeout: The remote NVIDIA server took too long to respond.")
             return ""
         except Exception as e:
             st.error(f"💥 Client Layer Exception: {str(e)}")
