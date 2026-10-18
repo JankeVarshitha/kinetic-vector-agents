@@ -32,5 +32,7 @@ class MotionLatticeEngine:
             "strictly adhering to the user's styling instruction. Keep all vector layout geometry, path IDs, "
             "and keyframe animations untouched. Output ONLY the modified complete raw SVG code."
         )
-        modified_svg = self.bridge.request_inference(refactor_system, f"Mutation Request: {style_modification_prompt}\n\nCurrent SVG:\n{current_svg}")
+        # Passing is_refactor=True explicitly targets the Cohere North Code model route
+        modified_svg = self.bridge.request_inference(refactor_system, f"Mutation Request: {style_modification_prompt}\n\nCurrent SVG:\n{current_svg}", is_refactor=True)
         return re.sub(r"```xml|```", "", modified_svg).strip()
+
