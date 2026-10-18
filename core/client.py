@@ -23,11 +23,11 @@ class NIMBridge:
         # to maximize token generation throughput and prevent 45-second network socket timeouts.
         payload = {
             "model": selected_model,
-            "max_tokens": 512,       # Locked at 512 tokens to minimize processing latency
-            "stream": True,
-            "temperature": 1.0,      # Partner-recommended sampling configuration
-            "top_p": 0.95,           # Partner-recommended sampling configuration
-            "top_k": 64,             # Partner-recommended sampling configuration
+            "max_tokens": 512,    
+            "stream": False,
+            "temperature": 1.0,     
+            "top_p": 0.95,        
+            "top_k": 64,            
             "frequency_penalty": 0,
             "presence_penalty": 0,
             "seed": 42,
@@ -36,6 +36,7 @@ class NIMBridge:
                 {"role": "user", "content": user_prompt}
             ]
         }
+
         
         try:
             response = requests.post(
