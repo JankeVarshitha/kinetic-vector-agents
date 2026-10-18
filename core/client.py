@@ -24,7 +24,7 @@ class NIMBridge:
         payload = {
             "model": selected_model,
             "max_tokens": 512,       # Locked at 512 tokens to minimize processing latency
-            "stream": False,
+            "stream": True,
             "temperature": 1.0,      # Partner-recommended sampling configuration
             "top_p": 0.95,           # Partner-recommended sampling configuration
             "top_k": 64,             # Partner-recommended sampling configuration
@@ -42,7 +42,7 @@ class NIMBridge:
                 url=self.url,
                 headers=headers,
                 json=payload,
-                stream=False,
+                stream=True,
                 timeout=60  # Increased socket limit to absorb dense structural computations safely
             )
             
