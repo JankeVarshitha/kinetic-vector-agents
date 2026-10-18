@@ -1,10 +1,10 @@
 import re
-from core.client import HuggingFaceBridge
+from core.client import InferenceBridge
 
 class MotionLatticeEngine:
     """Orchestrates multi-agent pipelines for multi-tier visual syntax compiling."""
-    def __init__(self, hf_token: str):
-        self.bridge = HuggingFaceBridge(hf_token=hf_token)
+    def __init__(self, api_token: str):
+        self.bridge = InferenceBridge(api_token=api_token)
 
     def build_animation(self, motion_intent: str) -> str:
         """Sequential layout-to-kinetic agent pipeline execution mapping."""
@@ -32,7 +32,9 @@ class MotionLatticeEngine:
             "strictly adhering to the user's styling instruction. Keep all vector layout geometry, path IDs, "
             "and keyframe animations untouched. Output ONLY the modified complete raw SVG code."
         )
-        # Passing is_refactor=True explicitly targets the Cohere North Code model route
-        modified_svg = self.bridge.request_inference(refactor_system, f"Mutation Request: {style_modification_prompt}\n\nCurrent SVG:\n{current_svg}", is_refactor=True)
+        modified_svg = self.bridge.request_inference(
+            refactor_system, 
+            f"Mutation Request: {style_modification_prompt}\n\nCurrent SVG:\n{current_svg}", 
+            is_refactor=True
+        )
         return re.sub(r"```xml|```", "", modified_svg).strip()
-
