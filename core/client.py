@@ -20,9 +20,9 @@ class NIMBridge:
         
         payload = {
             "model": selected_model,
-            "max_tokens": 512, 
-            "stream": False,  # Kept False to align with single chunk json mapping
-            "temperature": 0.2, # Lowered from 1.0 to increase token computation speed and predictability
+            "max_tokens": 512,
+            "stream": False,  # Explicitly turned off to allow complete content mapping
+            "temperature": 0.2, # Lowered for faster token generation speed
             "top_p": 0.95,
             "top_k": 64,
             "frequency_penalty": 0,
@@ -33,54 +33,36 @@ class NIMBridge:
                 {"role": "user", "content": user_prompt}
             ]
         }
-        
-        print("\n" + "="*60)
-        print(f"[DEBUG NIM CLIENT] Initiating Outbound Request to {selected_model}")
-        print(f"[DEBUG NIM CLIENT] Payload Configuration: max_tokens=512, stream=False, temp=0.2")
-        print(f"[DEBUG NIM CLIENT] User Prompt Snippet: {user_prompt[:100]}...")
-        print("="*60 + "\n")
 
         try:
-            # Lowered socket timeout slightly to crash faster for testing if the node hangs completely
+            # Shortened timeout to 30 seconds to fail fast rather than hanging for a minute
             response = requests.post(
                 url=self.url, 
                 headers=headers, 
                 json=payload, 
-                stream=False, 
-                timeout=45 
+                timeout=30 
             )
             
-            print(f"[DEBUG NIM CLIENT] HTTP Status Code Received: {response.status_code}")
-            
             if response.status_code != 200:
-                print(f"[DEBUG NIM CLIENT ERROR] Status code unhandled. Raw response text:\n{response.text}")
-                st.error(f"NVIDIA NIM Gateway Error ({response.status_code}): {response.text}")
+                st.error(f"❌ NVIDIA NIM Gateway Error ({response.status_code})")
+                st.code(response.text, language="json")
                 return ""
             
             response_json = response.json()
-            print("[DEBUG NIM CLIENT] JSON successfully parsed from response object.")
             
+            # SAFE TOPOLOGY PARSING: Checks array structures safely to prevent hidden crash loops
             if 'choices' in response_json and len(response_json['choices']) > 0:
-                message_block = response_json['choices'][0]['message']
-                content = message_block.get('content', '')
-                
-                print("\n" + "-"*40)
-                print(f"[DEBUG NIM CLIENT] RAW LLM OUTPUT RECEIVED (Length: {len(content)} chars):")
-                print(content)
-                print("-"*40 + "\n")
-                
-                return content
-            else:
-                print("[DEBUG NIM CLIENT ERROR] Target 'choices' array topology is completely missing from payload.")
-                print(f"[DEBUG NIM CLIENT ERROR] Full Payload received:\n{json.dumps(response_json, indent=2)}")
-                st.error("NVIDIA NIM Error: Response payload missing choices array topology.")
-                return ""
+                choice_node = response_json['choices'][0]
+                if 'message' in choice_node and 'content' in choice_node['message']:
+                    return choice_node['message']['content']
+            
+            st.error("❌ NIM Response Topology Conflict: Missing 'choices[0].message.content'")
+            st.code(json.dumps(response_json, indent=2), language="json")
+            return ""
                 
         except requests.exceptions.Timeout:
-            print("[DEBUG NIM CLIENT TIMEOUT] Upstream connection timed out at socket configuration limits.")
-            st.error("⏳ High-Latency Network Timeout: Upstream node took longer than expected to return. Please re-run.")
+            st.error("⏳ Connection Timeout: The remote NVIDIA server took over 30s to process this request.")
             return ""
         except Exception as e:
-            print(f"[DEBUG NIM CLIENT EXCEPTION] Critical execution failure: {str(e)}")
-            st.error(f"NVIDIA NIM Execution Layer Exception: {str(e)}")
+            st.error(f"💥 Client Layer Exception: {str(e)}")
             return ""
