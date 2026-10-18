@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-from core.pipeline import MotionLatticeEngine
+from core.pipeline import KineticVectorEngine
 from core.validator import VectorValidator
 
 st.set_page_config(page_title="Motion-Lattice Engine", layout="wide", page_icon="🎨")
@@ -9,21 +9,21 @@ if "active_svg" not in st.session_state:
     st.session_state.active_svg = None
 
 st.title("⚡ Motion-Lattice Engine")
-st.subheader("Decoupled Architecture Text-to-SVG Agentic Animation Framework")
+st.subheader("NVIDIA NIM Multi-Agent Text-to-SVG Kinetic Synthesis Framework")
 
 st.sidebar.header("🔑 Authentication")
-api_token_input = st.sidebar.text_input("Custom OpenRouter Token (Optional):", type="password")
+token_input = st.sidebar.text_input("Custom NVIDIA API Key (Optional):", type="password")
 
-# Secure multi-layer token environment fallback loop
-secret_token = st.secrets.get("OPENROUTER_TOKEN") if "OPENROUTER_TOKEN" in st.secrets else os.getenv("OPENROUTER_TOKEN")
-active_token = api_token_input if api_token_input else secret_token
+# Multi-layer secret variable extraction
+secret_token = st.secrets.get("NVIDIA_API_KEY") if "NVIDIA_API_KEY" in st.secrets else os.getenv("NVIDIA_API_KEY")
+active_token = token_input if token_input else secret_token
 
 if active_token:
-    st.sidebar.success("🔒 Remote API Engine Linked")
+    st.sidebar.success("🔒 Remote NIM Gateway Active")
 else:
     st.sidebar.warning("⚠️ Access Key Missing")
 
-# Resolved: Explicit positional column width specification injected
+# Resolved: Absolute layout columns declaration specified
 col_input, col_output = st.columns(2)
 
 with col_input:
@@ -44,7 +44,7 @@ if generate_btn:
         st.error("❌ Authentication Refused: Key parameters uninitialized.")
     else:
         with st.spinner("Processing downstream multi-agent nodes..."):
-            engine = MotionLatticeEngine(api_token=active_token)
+            engine = KineticVectorEngine(nim_token=active_token)
             generated_output = engine.build_animation(prompt)
             is_valid, final_svg = VectorValidator.validate_svg_syntax(generated_output)
             
@@ -61,7 +61,7 @@ if st.session_state.active_svg:
         style_prompt = st.text_input("Styling Instruction:", placeholder="e.g., Change to neon emerald green")
         if st.button("Submit Refactoring Request", type="primary"):
             with st.spinner("Modifying runtime vectors..."):
-                engine = MotionLatticeEngine(api_token=active_token)
+                engine = KineticVectorEngine(nim_token=active_token)
                 modified_output = engine.modify_style(st.session_state.active_svg, style_prompt)
                 is_valid, final_modified_svg = VectorValidator.validate_svg_syntax(modified_output)
                 if is_valid:
