@@ -5,9 +5,9 @@ from huggingface_hub import InferenceClient
 class HuggingFaceBridge:
     """Encapsulates secure connection protocol topologies for remote Hugging Face compute engines."""
     def __init__(self, hf_token: str):
-        # Swapped to Llama-3.1-8B-Instruct which routes natively on Hugging Face free internal clusters.
-        # This acts as an architectural guard against the 402 billing node errors.
-        self.client = InferenceClient("meta-llama/Llama-3.1-8B-Instruct", token=hf_token)
+        # Swapped to Mistral-7B-Instruct-v0.3 which handles structured code tasks 
+        # beautifully and operates natively outside the premium 402 partner routing layers.
+        self.client = InferenceClient("mistralai/Mistral-7B-Instruct-v0.3", token=hf_token)
         
     def request_inference(self, system_prompt: str, user_prompt: str) -> str:
         """Executes a low-temperature chat completion call optimized for serverless inference structures."""
@@ -18,7 +18,7 @@ class HuggingFaceBridge:
                     {"role": "user", "content": user_prompt}
                 ],
                 max_tokens=2048,
-                temperature=0.1,  # Low temperature guarantees syntax strictness
+                temperature=0.1,  # Strict decoding constraint for valid XML tags
                 top_p=0.95
             )
             return response.choices.message.content
