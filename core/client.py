@@ -20,7 +20,7 @@ class NIMBridge:
         
         payload = {
             "model": selected_model,
-            "max_tokens": 1536, # Bumped to 1536 to allow large SVG visual assets to compile fully
+            "max_tokens": 4096, # Bumped to 1536 to allow large SVG visual assets to compile fully
             "stream": False,  
             "temperature": 0.2, 
             "top_p": 0.95,
