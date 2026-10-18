@@ -41,13 +41,19 @@ with col_input:
     prompt = st.text_area("Describe your animation concept:", value="A sleek neon cyberpunk loader icon with smooth rotating gears.", height=100)
     generate_btn = st.button("Compile Kinetic Asset", type="primary")
 
+# app.py (Replace your current col_output with this layout version)
 with col_output:
     st.markdown("### 📺 Viewport")
     render_placeholder = st.empty()
+    
     if st.session_state.active_svg:
-        render_placeholder.components.v1.html(st.session_state.active_svg, height=500, scrolling=True)
+        # FIXED: Wrap components call via the utility inside the placeholder shell
+        with render_placeholder.container():
+            import streamlit.components.v1 as components
+            components.html(st.session_state.active_svg, height=500, scrolling=True)
     else:
         render_placeholder.info("Awaiting pipeline generation directives...")
+
 
 # app.py (Replace only the generate_btn execution block with this)
 if generate_btn:
