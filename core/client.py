@@ -40,9 +40,8 @@ class NIMBridge:
                 url=self.url, 
                 headers=headers, 
                 json=payload, 
-                timeout=600            )
+                timeout=600)
 
-            st.code(response)
             
             if response.status_code != 200:
                 st.error(f"❌ NVIDIA NIM Gateway Error ({response.status_code})")
@@ -50,6 +49,7 @@ class NIMBridge:
                 return ""
             
             response_json = response.json()
+            st.code(response_json)
             
             # SAFE TOPOLOGY PARSING: Checks array structures safely to prevent hidden crash loops
             if 'choices' in response_json and len(response_json['choices']) > 0:
