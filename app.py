@@ -23,12 +23,12 @@ if "active_svg" not in st.session_state:
     st.session_state.active_svg = None
 
 st.title("Animation Generator")
-st.subheader("NVIDIA NIM Multi-Agent Text-to-SVG Kinetic Synthesis Framework")
+st.subheader("AI Text-to-SVG Animation Studio") # Short & Impactful Title Option
 
 # --- BACKGROUND AUTHENTICATION BINDING ---
 active_token = st.secrets.get("NVIDIA_API_KEY") if "NVIDIA_API_KEY" in st.secrets else os.getenv("NVIDIA_API_KEY")
 
-col_input, col_output = st.columns([1, 1])
+col_input, col_output = st.columns(2)
 
 with col_input:
     st.markdown("### Generation Controls")
@@ -37,7 +37,46 @@ with col_input:
     # MOBILE FIX: Sanitize typography injection (removes smart quotes from mobile keyboards)
     prompt = prompt_raw.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'").strip()
     
-    generate_btn = st.button("Compile Kinetic Asset", type="primary")
+    # Layout adjustment: Create a nice spacing button layout inside the input column
+    generate_btn = st.button("Compile Kinetic Asset", type="primary", use_container_width=True)
+    
+    # --- LIVE REFACTORING DIALOG CONTROL HUB (LEFT SIDE PLACEMENT) ---
+    if st.session_state.active_svg and st.session_state.active_config:
+        st.write("") # Micro-spacing spacer
+        
+        @st.dialog("Refactor Vector Styling State")
+        def open_style_modal():
+            style_prompt_raw = st.text_input("Styling Instruction:", placeholder="e.g., Change to neon emerald green")
+            style_prompt = style_prompt_raw.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'").strip()
+            
+            if st.button("Submit Refactoring Request", type="primary"):
+                if not style_prompt:
+                    st.error("Please enter a styling instruction.")
+                    return
+                    
+                with st.spinner("Modifying runtime vectors..."):
+                    try:
+                        engine = KineticVectorEngine(nim_token=active_token)
+                        modified_config = engine.modify_style(st.session_state.active_config, style_prompt)
+                        
+                        compiled_html = engine._compile_to_html(modified_config)
+                        is_valid, final_modified_svg = VectorValidator.validate_svg_syntax(compiled_html)
+                        
+                        if is_valid:
+                            st.session_state.active_config = modified_config
+                            st.session_state.active_svg = final_modified_svg
+                            st.session_state["just_refactored"] = True
+                        else:
+                            st.error("❌ Refactoring validation failed.")
+                    except Exception as e:
+                        st.error(f"❌ Error during modification: {str(e)}")
+                
+                if "just_refactored" in st.session_state:
+                    st.rerun()
+
+        # The modification button now renders elegantly directly under Compile Kinetic Asset
+        if st.button("🎨 Click to Open Customization Tool", use_container_width=True):
+            open_style_modal()
 
 with col_output:
     st.markdown("### Generated Animation")
@@ -58,7 +97,6 @@ if generate_btn:
     if not active_token:
         st.error("❌ Authentication Refused: Remote credentials unavailable in this context.")
     else:
-        # User feedback container optimized to prevent mobile layout shifting
         with st.spinner("Processing multi-agent nodes... Please keep this browser window active."):
             try:
                 engine = KineticVectorEngine(nim_token=active_token)
@@ -72,14 +110,12 @@ if generate_btn:
                 
                 raw_output = engine.bridge.request_inference(layout_system, f"Asset Target: {prompt}")
                 
-                # Strip absolute empty characters to stabilize mobile packet streams
                 raw_output_clean = raw_output.strip()
                 dict_match = re.search(r'(\{[\s\S]*\})', raw_output_clean)
                 
                 if dict_match:
                     try:
                         clean_str = dict_match.group(1).strip()
-                        # Sanitize smart characters from the model response array
                         clean_str = clean_str.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'")
                         
                         try:
@@ -110,43 +146,6 @@ if generate_btn:
                 st.info("Mobile networks frequently drop long background processes. Ensure your phone remains unlocked with the browser active during generation.")
                 st.diagnostic_log = st.expander("View Diagnostic Trace")
                 st.diagnostic_log.code(str(gateway_err))
-
-# --- LIVE REFACTORING DIALOG CONTROL HUB ---
-if st.session_state.active_svg and st.session_state.active_config:
-    st.markdown("---")
-
-    @st.dialog("Refactor Vector Styling State")
-    def open_style_modal():
-        style_prompt_raw = st.text_input("Styling Instruction:", placeholder="e.g., Change to neon emerald green")
-        style_prompt = style_prompt_raw.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'").strip()
-        
-        if st.button("Submit Refactoring Request", type="primary"):
-            if not style_prompt:
-                st.error("Please enter a styling instruction.")
-                return
-                
-            with st.spinner("Modifying runtime vectors..."):
-                try:
-                    engine = KineticVectorEngine(nim_token=active_token)
-                    modified_config = engine.modify_style(st.session_state.active_config, style_prompt)
-                    
-                    compiled_html = engine._compile_to_html(modified_config)
-                    is_valid, final_modified_svg = VectorValidator.validate_svg_syntax(compiled_html)
-                    
-                    if is_valid:
-                        st.session_state.active_config = modified_config
-                        st.session_state.active_svg = final_modified_svg
-                        st.session_state["just_refactored"] = True
-                    else:
-                        st.error("❌ Refactoring validation failed.")
-                except Exception as e:
-                    st.error(f"❌ Error during modification: {str(e)}")
-            
-            if "just_refactored" in st.session_state:
-                st.rerun()
-
-    if st.button("Click to Open Customization Tool"):
-        open_style_modal()
 
 # Post-dialog evaluation frame cleanup logic
 if st.session_state.get("just_refactored"):
