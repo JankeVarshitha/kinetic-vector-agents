@@ -11,7 +11,7 @@ class NIMBridge:
 
     def request_inference(self, system_prompt: str, user_prompt: str) -> str:
         """Executes a direct raw HTTP POST request optimized for fast, zero-timeout layout generation."""
-        selected_model = "google/gemma-4-31b-it"
+        selected_model = "nvidia/nemotron-3.5-super-vl-120b-a12b"
         headers = {
             "Authorization": f"Bearer {self.nim_token}",
             "Accept": "application/json",
@@ -40,7 +40,7 @@ class NIMBridge:
                 url=self.url, 
                 headers=headers, 
                 json=payload, 
-                timeout=120
+                timeout=360
             )
 
             st.code(response)
