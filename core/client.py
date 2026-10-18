@@ -39,7 +39,7 @@ class NIMBridge:
                 url=self.url, 
                 headers=headers, 
                 json=payload, 
-                timeout=60
+                timeout=600
             )
 
             if response.status_code != 200:
