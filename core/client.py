@@ -6,7 +6,7 @@ class InferenceBridge:
     """Encapsulates secure connection protocol topologies for remote OpenRouter compute engines."""
     def __init__(self, api_token: str):
         self.client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
+            base_url="https://openrouter.ai/",
             api_key=api_token,
         )
         
