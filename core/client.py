@@ -7,14 +7,15 @@ class InferenceBridge:
     def __init__(self, api_token: str):
         # Initializing clean provider-agnostic engine routing structures
         self.client = OpenAI(
-            base_url="https://openrouter.ai",
+            base_url="https://openrouter.ai/api/v1",
             api_key=api_token,
         )
         
     def request_inference(self, system_prompt: str, user_prompt: str, is_refactor: bool = False) -> str:
-        """Executes a low-temperature chat completion call optimized for OpenRouter free inference routing."""
-        # Task specialized open-weights model selection routing matrix
-        selected_model = "cohere/north-mini-code:free" if is_refactor else "google/gemma-4-26b-a4b-it:free"
+        """Executes a low-temperature chat completion call optimized for OpenRouter free auto-routing."""
+        # Using the official OpenRouter dynamic free auto-router fallback slug.
+        # This completely abstracts model selection and guarantees zero credit cost.
+        selected_model = "openrouter/free"
         
         try:
             response = self.client.chat.completions.create(
