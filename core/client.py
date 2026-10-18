@@ -40,8 +40,10 @@ class NIMBridge:
                 url=self.url, 
                 headers=headers, 
                 json=payload, 
-                timeout=30 
+                timeout=120
             )
+
+            st.code(response)
             
             if response.status_code != 200:
                 st.error(f"❌ NVIDIA NIM Gateway Error ({response.status_code})")
