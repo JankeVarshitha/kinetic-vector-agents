@@ -22,7 +22,7 @@ if active_token:
 else:
     st.sidebar.warning("⚠️ Access Key Missing")
 
-col_input, col_output = st.columns()
+col_input, col_output = st.columns(2)
 
 with col_input:
     st.markdown("### 📥 Generation Controls")
